@@ -1,9 +1,91 @@
-body {
-    text-align: center;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@700&display=swap');
 
-ol {
-    list-style-position: inside;
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
     padding: 0;
 }
 
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f7f4ef;
+    font-family: 'Inter', sans-serif;
+    color: #2c2c2c;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 48px 56px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+}
+
+h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+}
+
+.divider {
+    width: 40px;
+    height: 3px;
+    background: #c8a96e;
+    border-radius: 2px;
+    margin: 0 auto 32px;
+}
+
+ol {
+    list-style: none;
+    padding: 0;
+    counter-reset: ranking;
+}
+
+ol li {
+    counter-increment: ranking;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: #faf8f5;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+ol li:hover {
+    background: #f0ebe2;
+}
+
+ol li::before {
+    content: counter(ranking);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #c8a96e;
+    min-width: 24px;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
