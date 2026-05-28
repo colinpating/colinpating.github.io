@@ -116,8 +116,48 @@
       color: var(--text);
     }
 
+    .wallet-banner {
+      margin: 16px 16px 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wallet-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .wallet-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .wallet-balance {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .wallet-balance.low {
+      color: var(--red);
+    }
+
+    .wallet-cost {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
     .content {
-      padding: 16px 16px 100px;
+      padding: 12px 16px 100px;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -140,9 +180,6 @@
       padding: 16px;
       transition: border-color 0.15s;
     }
-
-    .option-card.selected-yes { border-color: var(--green); }
-    .option-card.selected-no { border-color: var(--red); }
 
     .option-top {
       display: flex;
@@ -199,12 +236,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .btn:active { transform: scale(0.96); opacity: 0.85; }
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn:not(:disabled):active { transform: scale(0.96); opacity: 0.85; }
     .btn-yes { background: var(--green); color: #fff; }
     .btn-no { background: var(--red); color: #fff; }
-
     .btn-label { font-size: 13px; font-weight: 700; }
-    .btn-price { font-size: 11px; font-weight: 500; opacity: 0.85; }
+    .btn-cost { font-size: 11px; font-weight: 500; opacity: 0.85; }
 
     .toast {
       position: fixed;
@@ -249,13 +290,13 @@
       justify-content: space-between;
     }
 
-    .volume-info {
+    .status-info {
       display: flex;
       flex-direction: column;
       gap: 1px;
     }
 
-    .volume-label {
+    .status-label {
       font-size: 10px;
       font-weight: 600;
       color: var(--muted);
@@ -263,7 +304,7 @@
       letter-spacing: 0.06em;
     }
 
-    .volume-value {
+    .status-value {
       font-size: 14px;
       font-weight: 700;
       color: var(--text);
@@ -282,6 +323,13 @@
     }
 
     .share-btn:active { opacity: 0.8; }
+
+    .connecting {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px;
+    }
   </style>
 </head>
 <body>
@@ -300,13 +348,21 @@
       <span class="meta-value">Dec 31, 2030</span>
     </div>
     <div class="meta-item">
-      <span class="meta-label">Options</span>
-      <span class="meta-value">3</span>
+      <span class="meta-label">Traders</span>
+      <span class="meta-value" id="trader-count">—</span>
     </div>
     <div class="meta-item">
       <span class="meta-label">Volume</span>
-      <span class="meta-value" id="total-volume">Loading...</span>
+      <span class="meta-value" id="total-volume">—</span>
     </div>
+  </div>
+
+  <div class="wallet-banner">
+    <div class="wallet-left">
+      <span class="wallet-label">Your balance</span>
+      <span class="wallet-balance" id="wallet-balance">100¢</span>
+    </div>
+    <span class="wallet-cost" id="wallet-cost">Each bet costs 10¢</span>
   </div>
 
   <div class="content">
@@ -315,19 +371,19 @@
     <div class="option-card" id="card-adam">
       <div class="option-top">
         <span class="option-name">Adam</span>
-        <span class="option-prob" id="prob-adam">33%</span>
+        <span class="option-prob" id="prob-adam">—</span>
       </div>
       <div class="prob-bar-track">
-        <div class="prob-bar-fill" id="bar-adam" style="width:33%"></div>
+        <div class="prob-bar-fill" id="bar-adam" style="width:0%"></div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-yes" onclick="vote('adam','yes')">
+        <button class="btn btn-yes" id="btn-yes-adam" onclick="placeBet('adam','yes')" disabled>
           <span class="btn-label">Yes</span>
-          <span class="btn-price" id="price-yes-adam">33¢</span>
+          <span class="btn-cost">10¢</span>
         </button>
-        <button class="btn btn-no" onclick="vote('adam','no')">
+        <button class="btn btn-no" id="btn-no-adam" onclick="placeBet('adam','no')" disabled>
           <span class="btn-label">No</span>
-          <span class="btn-price" id="price-no-adam">67¢</span>
+          <span class="btn-cost">10¢</span>
         </button>
       </div>
     </div>
@@ -335,19 +391,19 @@
     <div class="option-card" id="card-paulo">
       <div class="option-top">
         <span class="option-name">Paulo</span>
-        <span class="option-prob" id="prob-paulo">33%</span>
+        <span class="option-prob" id="prob-paulo">—</span>
       </div>
       <div class="prob-bar-track">
-        <div class="prob-bar-fill" id="bar-paulo" style="width:33%"></div>
+        <div class="prob-bar-fill" id="bar-paulo" style="width:0%"></div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-yes" onclick="vote('paulo','yes')">
+        <button class="btn btn-yes" id="btn-yes-paulo" onclick="placeBet('paulo','yes')" disabled>
           <span class="btn-label">Yes</span>
-          <span class="btn-price" id="price-yes-paulo">33¢</span>
+          <span class="btn-cost">10¢</span>
         </button>
-        <button class="btn btn-no" onclick="vote('paulo','no')">
+        <button class="btn btn-no" id="btn-no-paulo" onclick="placeBet('paulo','no')" disabled>
           <span class="btn-label">No</span>
-          <span class="btn-price" id="price-no-paulo">67¢</span>
+          <span class="btn-cost">10¢</span>
         </button>
       </div>
     </div>
@@ -355,19 +411,19 @@
     <div class="option-card" id="card-sophia">
       <div class="option-top">
         <span class="option-name">Sophia</span>
-        <span class="option-prob" id="prob-sophia">34%</span>
+        <span class="option-prob" id="prob-sophia">—</span>
       </div>
       <div class="prob-bar-track">
-        <div class="prob-bar-fill" id="bar-sophia" style="width:34%"></div>
+        <div class="prob-bar-fill" id="bar-sophia" style="width:0%"></div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-yes" onclick="vote('sophia','yes')">
+        <button class="btn btn-yes" id="btn-yes-sophia" onclick="placeBet('sophia','yes')" disabled>
           <span class="btn-label">Yes</span>
-          <span class="btn-price" id="price-yes-sophia">34¢</span>
+          <span class="btn-cost">10¢</span>
         </button>
-        <button class="btn btn-no" onclick="vote('sophia','no')">
+        <button class="btn btn-no" id="btn-no-sophia" onclick="placeBet('sophia','no')" disabled>
           <span class="btn-label">No</span>
-          <span class="btn-price" id="price-no-sophia">66¢</span>
+          <span class="btn-cost">10¢</span>
         </button>
       </div>
     </div>
@@ -377,64 +433,133 @@
 
   <div class="bottom-bar">
     <div class="bottom-bar-inner">
-      <div class="volume-info">
-        <span class="volume-label">Your position</span>
-        <span class="volume-value" id="user-position">None</span>
+      <div class="status-info">
+        <span class="status-label">Status</span>
+        <span class="status-value" id="status-value">Connecting...</span>
       </div>
       <button class="share-btn" onclick="shareMarket()">Share</button>
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = 'loke-votes-v1';
-    const seed = { adam: 41, paulo: 37, sophia: 44 };
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getDatabase, ref, onValue, runTransaction, increment, set, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
-    function loadState() {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : { votes: { ...seed }, myPick: null };
-      } catch {
-        return { votes: { ...seed }, myPick: null };
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyCqQVsWX_74mmx8bwjBxDAm4xEmIcvR3GM",
+      authDomain: "loke-prediction.firebaseapp.com",
+      databaseURL: "https://loke-prediction-default-rtdb.firebaseio.com",
+      projectId: "loke-prediction",
+      storageBucket: "loke-prediction.firebasestorage.app",
+      messagingSenderId: "763517146782",
+      appId: "1:763517146782:web:35a672df7fcc924bb7cd8f",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const WALLET_KEY = 'loke-wallet-v2';
+    const BET = 10;
+    const SEED = { adam: 100, paulo: 100, sophia: 100 };
+    const NAMES = ['adam', 'paulo', 'sophia'];
+
+    // --- Wallet ---
+    function getBalance() {
+      const v = localStorage.getItem(WALLET_KEY);
+      return v !== null ? parseInt(v) : 100;
     }
 
-    function saveState(state) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    function deductBalance() {
+      const bal = getBalance();
+      if (bal < BET) return false;
+      localStorage.setItem(WALLET_KEY, bal - BET);
+      return true;
     }
 
-    function calcProbs(votes) {
-      const total = votes.adam + votes.paulo + votes.sophia;
-      return {
-        adam: Math.round((votes.adam / total) * 100),
-        paulo: Math.round((votes.paulo / total) * 100),
-        sophia: 100 - Math.round((votes.adam / total) * 100) - Math.round((votes.paulo / total) * 100),
-        total
-      };
+    // --- Render ---
+    let liveScores = null;
+
+    function calcProbs(scores) {
+      const total = scores.adam + scores.paulo + scores.sophia;
+      const a = Math.round((scores.adam / total) * 100);
+      const p = Math.round((scores.paulo / total) * 100);
+      return { adam: a, paulo: p, sophia: 100 - a - p, rawTotal: total };
     }
 
-    function render(state) {
-      const p = calcProbs(state.votes);
-      ['adam', 'paulo', 'sophia'].forEach(n => {
+    function render(scores, traderCount) {
+      const bal = getBalance();
+      const p = calcProbs(scores);
+      const canBet = bal >= BET;
+
+      NAMES.forEach(n => {
         const pct = p[n];
         document.getElementById(`prob-${n}`).textContent = `${pct}%`;
         document.getElementById(`bar-${n}`).style.width = `${pct}%`;
-        document.getElementById(`price-yes-${n}`).textContent = `${pct}¢`;
-        document.getElementById(`price-no-${n}`).textContent = `${100 - pct}¢`;
-        const card = document.getElementById(`card-${n}`);
-        card.classList.remove('selected-yes', 'selected-no');
-        if (state.myPick && state.myPick.name === n) {
-          card.classList.add(state.myPick.side === 'yes' ? 'selected-yes' : 'selected-no');
-        }
+        document.getElementById(`btn-yes-${n}`).disabled = !canBet;
+        document.getElementById(`btn-no-${n}`).disabled = !canBet;
       });
-      document.getElementById('total-volume').textContent = `${p.total} votes`;
-      if (state.myPick) {
-        const name = state.myPick.name.charAt(0).toUpperCase() + state.myPick.name.slice(1);
-        document.getElementById('user-position').textContent = `${state.myPick.side.toUpperCase()} on ${name}`;
-      } else {
-        document.getElementById('user-position').textContent = 'None';
+
+      const balEl = document.getElementById('wallet-balance');
+      balEl.textContent = `${bal}¢`;
+      balEl.classList.toggle('low', bal < 30);
+
+      const betsPlaced = Math.round((p.rawTotal - 300) / BET);
+      document.getElementById('total-volume').textContent = betsPlaced > 0 ? `${betsPlaced * BET}¢` : '—';
+      document.getElementById('trader-count').textContent = traderCount || '—';
+      document.getElementById('status-value').textContent = canBet ? 'Open' : 'Out of funds';
+
+      if (!canBet) {
+        document.getElementById('wallet-cost').textContent = 'No funds remaining';
       }
     }
 
+    // --- Firebase listener ---
+    const scoresRef = ref(db, 'scores');
+    const tradersRef = ref(db, 'traders');
+    let traderCount = 0;
+
+    onValue(tradersRef, snap => { traderCount = snap.val() || 0; });
+
+    onValue(scoresRef, snap => {
+      const data = snap.val();
+      if (data) {
+        liveScores = {
+          adam: data.adam ?? SEED.adam,
+          paulo: data.paulo ?? SEED.paulo,
+          sophia: data.sophia ?? SEED.sophia,
+        };
+      } else {
+        liveScores = { ...SEED };
+      }
+      render(liveScores, traderCount);
+    });
+
+    // Track unique trader (once per device)
+    const TRADER_KEY = 'loke-trader-v1';
+    if (!localStorage.getItem(TRADER_KEY)) {
+      localStorage.setItem(TRADER_KEY, '1');
+      runTransaction(ref(db, 'traders'), v => (v || 0) + 1);
+    }
+
+    // --- Betting ---
+    window.placeBet = function(name, side) {
+      if (!liveScores) return;
+      if (!deductBalance()) { showToast('Out of funds!'); return; }
+
+      const delta = side === 'yes' ? BET : -BET;
+      runTransaction(ref(db, `scores/${name}`), current => {
+        return Math.max(1, (current ?? SEED[name]) + delta);
+      });
+
+      const label = name.charAt(0).toUpperCase() + name.slice(1);
+      showToast(`${side === 'yes' ? '+' : '−'}${BET}¢ on ${side === 'yes' ? 'Yes' : 'No'} ${label}`);
+
+      // Optimistic local update
+      liveScores[name] = Math.max(1, liveScores[name] + delta);
+      render(liveScores, traderCount);
+    };
+
+    // --- Toast ---
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -442,37 +567,15 @@
       setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    function vote(name, side) {
-      const state = loadState();
-      const prev = state.myPick;
-      if (prev && prev.side === 'yes') {
-        state.votes[prev.name] = Math.max(1, state.votes[prev.name] - 1);
-      }
-      if (prev && prev.name === name && prev.side === side) {
-        state.myPick = null;
-        showToast('Position removed');
-      } else {
-        if (side === 'yes') state.votes[name]++;
-        state.myPick = { name, side };
-        const label = name.charAt(0).toUpperCase() + name.slice(1);
-        showToast(`${side === 'yes' ? 'Yes' : 'No'} on ${label} selected`);
-      }
-      saveState(state);
-      render(state);
-    }
-
-    function shareMarket() {
+    // --- Share ---
+    window.shareMarket = function() {
       const url = window.location.href;
       if (navigator.share) {
         navigator.share({ title: 'Next Loke to get married?', url });
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
-      } else {
-        showToast('Share: ' + url);
       }
-    }
-
-    render(loadState());
+    };
   </script>
 </body>
 </html>
